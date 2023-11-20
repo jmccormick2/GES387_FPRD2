@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Final Project</title>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+
+    <script src="leaflet.heat.js"></script>
+        
+        <!-- Also reference JQuery for reading the geojson (point layer) -->
+        <script src="https://code.jquery.com/jquery-2.1.1.min.js"></script> 
+
+    <style type="text/css">
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+
+        #map {
+            height: 100vh;
+        }
+    </style>
+
+    <script type="text/javascript" src="data1.js"></script>
+    <script type="text/javascript" src="data2.js"></script>
+</head>
+
+<body>
+    <h3 style="color:red; font-weight:bold; text-align:center">Heat Map of Vehicular Fatalities in Chicago</h3>
+    <div id="map"></div>
+
+    <script type="text/javascript">
+        var map = L.map('map', {
+            center: [41.881832, -87.623177],
+            zoom: 10.5
+        });
+
+        var customIcon = L.icon({
+            iconUrl: 'speed-radar.png',
+            iconSize: [32, 32],
+            iconAnchor: [16, 32],
+            popupAnchor: [0, -32]
+        });
+
+        var speedCamerasLayer = L.geoJson(data1, {
+            pointToLayer: function (feature, latlng) {
+                return L.marker(latlng, { icon: customIcon });
+            }
+        }).addTo(map);
+
+        
+
+        L.tileLayer('https://cartodb-basemaps-{s}.global.ssl.fastly.net/light_all/{z}/{x}/{y}.png', {
+            attribution: 'Map tiles by Carto, under CC BY 3.0. Data by OpenStreetMap, under ODbL.',
+            maxZoom: 17,
+            minZoom: 5
+        }).addTo(map);
+		$.getJSON("fatalities.geojson",function(data){                     
+
+            var locations = data.features.map(function(fatalities) {
+                  var location = fatalities.geometry.coordinates.reverse();
+                  location.push(1); //add intensity of each point location, range between 0.0 and 1.0
+                  return location; 
+            });
+            
+            var heat = L.heatLayer(locations, { 
+                        radius: 85, 
+                        gradient: {0.4: 'yellow', 0.65: 'orange', 1: 'red'} 
+                        });                     
+            map.addLayer(heat);
+          });
+    </script>
+</body>
+</html>
